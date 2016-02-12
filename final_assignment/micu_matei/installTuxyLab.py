@@ -103,6 +103,7 @@ import argparse
 import urllib2
 import shutil
 import time
+import platform
 
 
 def write_log(message_type, message):
@@ -273,6 +274,31 @@ def function_delete(functie_name, valori):
     return True
 
 
+def function_shutdown(valori):
+    """ restartam calculator """
+
+    command = "win32api call"
+    if valori['method'] == "soft":
+        command = "shutdown now"
+    elif valori['method'] == "hard":
+        command = "halt now"
+
+    # sa nu dau restart din prostie 
+    command = "asdasd"
+
+    platfm = platform.system()
+
+    write_log('h', "Dam restart folosind :" + command)
+    write_log('d', platfm)
+
+    if platfm == "Linux":
+        os.system(command)
+    elif platfm == "Windows":
+        import win32api
+        win32api.InitiateSystemShutdown()
+    return True
+
+
 def apel_functie(functie_name, valori):
     """ apelam parsam valorile pentru functie si apelam functia """
     it_workerd = True
@@ -283,28 +309,31 @@ def apel_functie(functie_name, valori):
         it_workerd = function_run_script(functie_name, valori)
     elif functie_name == 'delete':
         it_workerd = function_delete(functie_name, valori)
+    elif functie_name == 'shutdown':
+        it_workerd = function_shutdown(valori)
 
     return it_workerd
 
 
-def do_set_of_instructions(faza, instructiuni):
+def do_set_of_instructions(faza, set_of_instructiuni):
     """ primeste o faza si face setul de instructiuni din acea faza"""
     write_log("h", "Rulam faza :" + faza)
     it_workerd = True
 
     # deoarece after_install, install, si after_install sunt liste cu un
     # element
-    if isinstance(instructiuni, list) and len(instructiuni) > 0:
-        instructiuni = instructiuni[0]
+    if isinstance(set_of_instructiuni, dict):
+        set_of_instructiuni = [set_of_instructiuni]
 
-    for key in instructiuni:
-        value = instructiuni[key]
-        it_workerd = apel_functie(key, value)
+    for instructiuni in set_of_instructiuni:
+        for key in instructiuni:
+            value = instructiuni[key]
+            it_workerd = apel_functie(key, value)
 
-        if not it_workerd:
-            write_log("e", "Nu am putut efectua instructiunea " + key)
-            write_log("d", value)
-            break
+            if not it_workerd:
+                write_log("e", "Nu am putut efectua instructiunea " + key)
+                write_log("d", value)
+                break
 
     return it_workerd
 
