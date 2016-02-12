@@ -98,9 +98,11 @@ toate lucrurile care s-au întâmplat.
 """
 from __future__ import print_function
 import json
-# import os
+import os
 import argparse
 import urllib2
+import subprocess
+import time
 
 
 def write_log(message_type, message):
@@ -182,6 +184,71 @@ def function_download(name, valori):
     return it_workerd
 
 
+def function_run_script(name, valori):
+    """ setam variabilele de sistem, si rulam un script """
+    attemts = valori['attempts']
+    check_exit_code = valori['check_exit_code']
+
+    if isinstance(check_exit_code, unicode):
+        check_exit_code = bool(check_exit_code)
+    if isinstance(check_exit_code, bool):
+        if check_exit_code:
+            check_exit_code = [0]
+        else:
+            check_exit_code = []
+    env_variables = valori['env_variables']
+    retry_interval = valori['retry_interval']
+    shell = valori["shell"]
+    command = valori["command"]
+
+    cwd = valori['cwd']
+    try:
+        if cwd:
+            os.chdir(cwd)
+        write_log('o', "Am setat cwd :" + cwd)
+    except OSError:
+        write_log('e', "Nu am putut seta cwd :" + cwd)
+        write_log('e', "Probabil nu exista")
+        return False
+
+    for name in env_variables:
+        os.environ[name] = env_variables[name]
+
+    write_log('o', "Am setat variabilele de sistem ")
+    write_log('d', env_variables)
+
+    it_workerd = False
+    while attemts:
+        attemts -= 1
+        if shell:
+            try:
+                ret = os.system(command)
+            except OSError as error:
+                write_log('e', "Nu am putut rula scriptul !")
+                write_log('e', "Commanda " + command)
+                write_log('d', error)
+        else:
+            pass
+
+        if not check_exit_code:
+            it_workerd = True
+            break
+
+        if ret in check_exit_code:
+            it_workerd = True
+            write_log('o', "Am rulat scriptul :" + command)
+            write_log('o', "Am avut exitcodul " + str(ret))
+            break
+        else:
+            write_log('e', "Am rulat scriptul :" + command)
+            write_log('e', "Am avut exitcodul " + str(ret))
+            write_log('e', "Expected exitcode :")
+            write_log('d', check_exit_code)
+
+    time.sleep(int(retry_interval))
+
+    return it_workerd
+
 
 def apel_functie(functie_name, valori):
     """ apelam parsam valorile pentru functie si apelam functia """
@@ -197,7 +264,7 @@ def apel_functie(functie_name, valori):
 
 def do_set_of_instructions(faza, instructiuni):
     """ primeste o faza si face setul de instructiuni din acea faza"""
-    write_log("h", "Rulam faza " + faza)
+    write_log("h", "Rulam faza :" + faza)
     it_workerd = True
 
     # deoarece after_install, install, si after_install sunt liste cu un
