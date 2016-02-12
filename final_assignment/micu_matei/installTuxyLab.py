@@ -101,7 +101,7 @@ import json
 import os
 import argparse
 import urllib2
-import subprocess
+import shutil
 import time
 
 
@@ -250,6 +250,29 @@ def function_run_script(name, valori):
     return it_workerd
 
 
+def function_delete(functie_name, valori):
+    """ deletam ce se afla la path"""
+    path_to_delete = valori.get("path", None)
+
+    if not path_to_delete:
+        write_log('e', "Nu ati dat un path")
+        return False
+
+    if not os.path.exists(path_to_delete):
+        write_log('e', "Pathul nu este valid :" + path_to_delete)
+
+    if os.path.isfile(path_to_delete):
+        os.remove(path_to_delete)
+        write_log('o', "Am eliminat fisierul :" + path_to_delete)
+
+    elif os.path.isdir(path_to_delete):
+        shutil.rmtree(path_to_delete)
+        write_log('o', "Am eliminat directorul :" + path_to_delete)
+
+    write_log('o', "Am executat cu succes " + functie_name)
+    return True
+
+
 def apel_functie(functie_name, valori):
     """ apelam parsam valorile pentru functie si apelam functia """
     it_workerd = True
@@ -258,6 +281,8 @@ def apel_functie(functie_name, valori):
         it_workerd = function_download(functie_name, valori)
     elif functie_name == 'run_script':
         it_workerd = function_run_script(functie_name, valori)
+    elif functie_name == 'delete':
+        it_workerd = function_delete(functie_name, valori)
 
     return it_workerd
 
@@ -289,9 +314,10 @@ def main():
     args = parser_cli_arguments()
     data = parse_file(args.config_file)
 
-    f = open('build.log', 'w')
-    f.write('')
-    f.close()
+    # delete log file
+    log_file = open('build.log', 'w')
+    log_file.write('')
+    log_file.close()
 
     it_workerd = True
     if not data:
