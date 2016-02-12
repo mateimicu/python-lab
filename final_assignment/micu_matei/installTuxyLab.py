@@ -283,7 +283,7 @@ def function_shutdown(valori):
     elif valori['method'] == "hard":
         command = "halt now"
 
-    # sa nu dau restart din prostie 
+    # sa nu dau restart din prostie
     command = "asdasd"
 
     platfm = platform.system()
@@ -299,6 +299,46 @@ def function_shutdown(valori):
     return True
 
 
+def create_accout_linux(name, p_grup, groups, exp_date, passwd):
+    """ cream un cont pe linux"""
+    write_log('w', "Trebuie sa adaugam un user cu :")
+    write_log('d', name)
+    write_log('d', p_grup)
+    write_log('d', groups)
+    write_log('d', exp_date)
+    write_log('d', passwd)
+
+
+def create_accout_windows(name, p_grup, groups, exp_date, passwd):
+    """ cream un cont pe linux"""
+    write_log('w', "Trebuie sa adaugam un user cu :")
+    write_log('d', name)
+    write_log('d', p_grup)
+    write_log('d', groups)
+    write_log('d', exp_date)
+    write_log('d', passwd)
+
+
+def function_account(valori):
+    """ Cream conturi """
+    platfm = platform.system()
+    write_log('h', "Cream un user pe " + platfm)
+    write_log('d', valori)
+
+    name = valori["full_name"]
+    p_grup = valori["primary_group"]
+    groups = valori["users"]
+    exp_date = valori["expiredate"]
+    passwd = valori["password"]
+
+    if platfm == "Linux":
+        create_accout_linux(name, p_grup, groups, exp_date, passwd)
+    elif platfm == "Windows":
+        create_accout_windows(name, p_grup, groups, exp_date, passwd)
+
+    return True
+
+
 def apel_functie(functie_name, valori):
     """ apelam parsam valorile pentru functie si apelam functia """
     it_workerd = True
@@ -311,6 +351,8 @@ def apel_functie(functie_name, valori):
         it_workerd = function_delete(functie_name, valori)
     elif functie_name == 'shutdown':
         it_workerd = function_shutdown(valori)
+    elif functie_name == 'account':
+        it_workerd = function_account(valori)
 
     return it_workerd
 
